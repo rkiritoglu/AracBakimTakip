@@ -14,10 +14,7 @@ import {
   Clock, 
   RotateCcw, 
   Calendar, 
-  Gauge, 
-  ShieldCheck, 
   Edit3, 
-  X, 
   Check 
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -28,9 +25,8 @@ interface ScheduleViewProps {
   onSaveSchedule: (item: MaintenanceScheduleItem) => void;
   onDeleteSchedule: (id: string) => void;
   onResetTemplates: () => void;
-  isOpenAddModal: boolean;
-  onCloseAddModal: () => void;
   onOpenAddModal: () => void;
+  onEditItem: (item: MaintenanceScheduleItem) => void;
 }
 
 export const ScheduleView: React.FC<ScheduleViewProps> = ({
@@ -39,58 +35,10 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
   onSaveSchedule,
   onDeleteSchedule,
   onResetTemplates,
-  isOpenAddModal,
-  onCloseAddModal,
   onOpenAddModal,
+  onEditItem,
 }) => {
   const [filter, setFilter] = useState<'all' | 'urgent' | 'warning' | 'good'>('all');
-  const [editingItem, setEditingItem] = useState<MaintenanceScheduleItem | null>(null);
-
-  const [formData, setFormData] = useState<{
-    title: string;
-    category: 'periyodik' | 'sivi' | 'parca' | 'yasal' | 'lastik' | 'agir' | 'diger';
-    intervalKm: string;
-    intervalMonths: string;
-    lastDoneKm: string;
-    lastDoneDate: string;
-    notes: string;
-  }>({
-    title: '',
-    category: 'periyodik',
-    intervalKm: '10000',
-    intervalMonths: '12',
-    lastDoneKm: vehicle.currentKm.toString(),
-    lastDoneDate: new Date().toISOString().split('T')[0],
-    notes: '',
-  });
-
-  const openNewModal = () => {
-    setEditingItem(null);
-    setFormData({
-      title: '',
-      category: 'periyodik',
-      intervalKm: '10000',
-      intervalMonths: '12',
-      lastDoneKm: vehicle.currentKm.toString(),
-      lastDoneDate: new Date().toISOString().split('T')[0],
-      notes: '',
-    });
-    onOpenAddModal();
-  };
-
-  const openEditModal = (item: MaintenanceScheduleItem) => {
-    setEditingItem(item);
-    setFormData({
-      title: item.title,
-      category: item.category,
-      intervalKm: item.intervalKm ? item.intervalKm.toString() : '',
-      intervalMonths: item.intervalMonths ? item.intervalMonths.toString() : '',
-      lastDoneKm: item.lastDoneKm ? item.lastDoneKm.toString() : '',
-      lastDoneDate: item.lastDoneDate || '',
-      notes: item.notes || '',
-    });
-    onOpenAddModal();
-  };
 
   // "Bakımı Yapıldı Olarak İşle" hızlı butonu
   const handleMarkAsDone = (item: MaintenanceScheduleItem) => {
@@ -129,43 +77,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
     } catch {
       // ignore
     }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const intervalKmNum = formData.intervalKm ? Number(formData.intervalKm) : undefined;
-    const intervalMonthsNum = formData.intervalMonths ? Number(formData.intervalMonths) : undefined;
-    const lastDoneKmNum = formData.lastDoneKm ? Number(formData.lastDoneKm) : undefined;
-
-    let targetKm: number | undefined;
-    if (intervalKmNum && lastDoneKmNum !== undefined) {
-      targetKm = lastDoneKmNum + intervalKmNum;
-    }
-
-    let targetDate: string | undefined;
-    if (intervalMonthsNum && formData.lastDoneDate) {
-      const d = new Date(formData.lastDoneDate);
-      d.setMonth(d.getMonth() + intervalMonthsNum);
-      targetDate = d.toISOString().split('T')[0];
-    }
-
-    const newItem: MaintenanceScheduleItem = {
-      id: editingItem ? editingItem.id : `sch-${Date.now()}`,
-      vehicleId: vehicle.id,
-      title: formData.title.trim(),
-      category: formData.category,
-      intervalKm: intervalKmNum,
-      intervalMonths: intervalMonthsNum,
-      lastDoneKm: lastDoneKmNum,
-      lastDoneDate: formData.lastDoneDate || undefined,
-      targetKm,
-      targetDate,
-      notes: formData.notes.trim() || undefined,
-      isDefaultTemplate: editingItem ? editingItem.isDefaultTemplate : false,
-    };
-
-    onSaveSchedule(newItem);
-    onCloseAddModal();
   };
 
   // Her kalemin durumunu hesapla
@@ -246,7 +157,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
           </button>
 
           <button
-            onClick={openNewModal}
+            onClick={onOpenAddModal}
             type="button"
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-emerald-500/20 transition-all hover:scale-[1.02]"
           >
@@ -328,7 +239,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
                 <div className="flex items-start justify-between gap-3 mb-2">
                   <div>
                     <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300">
-                      {item.category === 'sivi' ? 'Sıvı & Yağ' : item.category === 'parca' ? 'Filtre & Parça' : item.category === 'yasal' ? 'Yasal Zorunluluk' : 'Periyodik'}
+                      {item.category === 'sivi' ? 'Sıvı & Yağ' : item.category === 'parca' ? 'Filtre & Parça' : item.category === 'agir' ? 'Ağır Bakım' : item.category === 'yasal' ? 'Yasal Zorunluluk' : 'Periyodik'}
                     </span>
                     <h3 className="font-bold text-base text-slate-900 dark:text-white mt-1">
                       {item.title}
@@ -425,7 +336,7 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
 
                 <div className="flex items-center gap-1">
                   <button
-                    onClick={() => openEditModal(item)}
+                    onClick={() => onEditItem(item)}
                     className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
                     title="Düzenle"
                   >
@@ -449,128 +360,6 @@ export const ScheduleView: React.FC<ScheduleViewProps> = ({
           );
         })}
       </div>
-
-      {/* YENİ / DÜZENLE BAKIM PLANI MODALI */}
-      {isOpenAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <CalendarClock className="w-5 h-5 text-emerald-500" />
-                <span>{editingItem ? 'Bakım Planını Düzenle' : 'Yeni Bakım Planı / Hatırlatıcı'}</span>
-              </h3>
-              <button onClick={onCloseAddModal} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="mt-4 space-y-3">
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                  Bakım / Parça Adı *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="örn: Şanzıman Yağı Değişimi veya Diferansiyel Yağı"
-                  value={formData.title}
-                  onChange={(e) => setFormData(p => ({ ...p, title: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                    Kategori
-                  </label>
-                  <select
-                    value={formData.category}
-                    onChange={(e) => setFormData(p => ({ ...p, category: e.target.value as any }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white"
-                  >
-                    <option value="periyodik">Periyodik Bakım</option>
-                    <option value="sivi">Sıvı & Yağ</option>
-                    <option value="parca">Filtre & Yedek Parça</option>
-                    <option value="yasal">Yasal Zorunluluk (Muayene vb.)</option>
-                    <option value="diger">Diğer</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                    Bakım Aralığı (KM)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="örn: 10000"
-                    value={formData.intervalKm}
-                    onChange={(e) => setFormData(p => ({ ...p, intervalKm: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                    Bakım Aralığı (Ay)
-                  </label>
-                  <input
-                    type="number"
-                    placeholder="örn: 12"
-                    value={formData.intervalMonths}
-                    onChange={(e) => setFormData(p => ({ ...p, intervalMonths: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-slate-900 dark:text-white"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                    Son Yapıldığı KM
-                  </label>
-                  <input
-                    type="number"
-                    value={formData.lastDoneKm}
-                    onChange={(e) => setFormData(p => ({ ...p, lastDoneKm: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                  Son Yapıldığı Tarih
-                </label>
-                <input
-                  type="date"
-                  value={formData.lastDoneDate}
-                  onChange={(e) => setFormData(p => ({ ...p, lastDoneDate: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                  Notlar / Parça Açıklaması
-                </label>
-                <input
-                  type="text"
-                  placeholder="örn: Motul 75W-90 tam sentetik dişli yağı..."
-                  value={formData.notes}
-                  onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
-                <button type="button" onClick={onCloseAddModal} className="px-4 py-2 text-xs rounded-xl text-slate-600">İptal</button>
-                <button type="submit" className="px-5 py-2 text-xs font-medium rounded-xl bg-emerald-600 text-white">Kaydet</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
     </div>
   );

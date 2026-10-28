@@ -8,7 +8,7 @@ import {
   BatteryRecord, 
   MaintenanceScheduleItem 
 } from './types';
-import { generateReminders } from './utils/calculations';
+import { generateReminders, calculateFuelStats } from './utils/calculations';
 import { Header } from './components/Header';
 import { NavigationTabs, TabType } from './components/NavigationTabs';
 import { DashboardView } from './components/DashboardView';
@@ -18,6 +18,10 @@ import { TiresAndBatteryView } from './components/TiresAndBatteryView';
 import { ScheduleView } from './components/ScheduleView';
 import { ReportsView } from './components/ReportsView';
 import { VehicleSettingsView } from './components/VehicleSettingsView';
+import { AddFuelModal } from './components/modals/AddFuelModal';
+import { AddMaintenanceModal } from './components/modals/AddMaintenanceModal';
+import { AddTireModal } from './components/modals/AddTireModal';
+import { AddScheduleModal } from './components/modals/AddScheduleModal';
 import { Car, Plus, Sparkles } from 'lucide-react';
 
 export function App() {
@@ -51,11 +55,18 @@ export function App() {
   const [batteries, setBatteries] = useState<BatteryRecord[]>([]);
   const [schedules, setSchedules] = useState<MaintenanceScheduleItem[]>([]);
 
-  // Modal Tetikleyicileri
+  // Modal Tetikleyicileri & Düzenleme Durumları
   const [isOpenAddMaintenance, setIsOpenAddMaintenance] = useState(false);
+  const [editingMaintenanceRecord, setEditingMaintenanceRecord] = useState<MaintenanceRecord | null>(null);
+
   const [isOpenAddFuel, setIsOpenAddFuel] = useState(false);
+  const [editingFuelRecord, setEditingFuelRecord] = useState<FuelRecord | null>(null);
+
   const [isOpenAddTire, setIsOpenAddTire] = useState(false);
+  const [editingTireRecord, setEditingTireRecord] = useState<TireSet | null>(null);
+
   const [isOpenAddSchedule, setIsOpenAddSchedule] = useState(false);
+  const [editingScheduleRecord, setEditingScheduleRecord] = useState<MaintenanceScheduleItem | null>(null);
 
   // Dosya Yükleme Referansı
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -334,10 +345,22 @@ export function App() {
                 schedules={schedules}
                 reminders={reminders}
                 onChangeTab={setActiveTab}
-                onOpenAddFuel={() => setIsOpenAddFuel(true)}
-                onOpenAddMaintenance={() => setIsOpenAddMaintenance(true)}
-                onOpenAddTire={() => setIsOpenAddTire(true)}
-                onOpenAddSchedule={() => setIsOpenAddSchedule(true)}
+                onOpenAddFuel={() => {
+                  setEditingFuelRecord(null);
+                  setIsOpenAddFuel(true);
+                }}
+                onOpenAddMaintenance={() => {
+                  setEditingMaintenanceRecord(null);
+                  setIsOpenAddMaintenance(true);
+                }}
+                onOpenAddTire={() => {
+                  setEditingTireRecord(null);
+                  setIsOpenAddTire(true);
+                }}
+                onOpenAddSchedule={() => {
+                  setEditingScheduleRecord(null);
+                  setIsOpenAddSchedule(true);
+                }}
                 onQuickUpdateKm={() => {
                   const val = prompt('Yeni Kilometre Giriniz:', activeVehicle.currentKm.toString());
                   if (val && !isNaN(parseInt(val, 10))) {
@@ -351,11 +374,15 @@ export function App() {
               <MaintenanceView
                 vehicle={activeVehicle}
                 records={maintenance}
-                onSaveRecord={handleSaveMaintenance}
+                onOpenAddModal={() => {
+                  setEditingMaintenanceRecord(null);
+                  setIsOpenAddMaintenance(true);
+                }}
+                onEditRecord={(rec) => {
+                  setEditingMaintenanceRecord(rec);
+                  setIsOpenAddMaintenance(true);
+                }}
                 onDeleteRecord={handleDeleteMaintenance}
-                isOpenAddModal={isOpenAddMaintenance}
-                onCloseAddModal={() => setIsOpenAddMaintenance(false)}
-                onOpenAddModal={() => setIsOpenAddMaintenance(true)}
               />
             )}
 
@@ -363,11 +390,15 @@ export function App() {
               <FuelView
                 vehicle={activeVehicle}
                 records={fuel}
-                onSaveRecord={handleSaveFuel}
+                onOpenAddModal={() => {
+                  setEditingFuelRecord(null);
+                  setIsOpenAddFuel(true);
+                }}
+                onEditRecord={(rec) => {
+                  setEditingFuelRecord(rec);
+                  setIsOpenAddFuel(true);
+                }}
                 onDeleteRecord={handleDeleteFuel}
-                isOpenAddModal={isOpenAddFuel}
-                onCloseAddModal={() => setIsOpenAddFuel(false)}
-                onOpenAddModal={() => setIsOpenAddFuel(true)}
               />
             )}
 
@@ -376,14 +407,19 @@ export function App() {
                 vehicle={activeVehicle}
                 tires={tires}
                 batteries={batteries}
+                onOpenAddTireModal={() => {
+                  setEditingTireRecord(null);
+                  setIsOpenAddTire(true);
+                }}
+                onEditTire={(tire) => {
+                  setEditingTireRecord(tire);
+                  setIsOpenAddTire(true);
+                }}
                 onSaveTire={handleSaveTire}
                 onDeleteTire={handleDeleteTire}
                 onMountTire={handleMountTire}
                 onSaveBattery={handleSaveBattery}
                 onDeleteBattery={handleDeleteBattery}
-                isOpenAddTireModal={isOpenAddTire}
-                onCloseAddTireModal={() => setIsOpenAddTire(false)}
-                onOpenAddTireModal={() => setIsOpenAddTire(true)}
               />
             )}
 
@@ -394,9 +430,14 @@ export function App() {
                 onSaveSchedule={handleSaveSchedule}
                 onDeleteSchedule={handleDeleteSchedule}
                 onResetTemplates={handleResetTemplates}
-                isOpenAddModal={isOpenAddSchedule}
-                onCloseAddModal={() => setIsOpenAddSchedule(false)}
-                onOpenAddModal={() => setIsOpenAddSchedule(true)}
+                onOpenAddModal={() => {
+                  setEditingScheduleRecord(null);
+                  setIsOpenAddSchedule(true);
+                }}
+                onEditItem={(item) => {
+                  setEditingScheduleRecord(item);
+                  setIsOpenAddSchedule(true);
+                }}
               />
             )}
 
@@ -425,6 +466,73 @@ export function App() {
           </>
         )}
       </main>
+
+      {/* GLOBAL MODALLER (Genel Bakış Dahil Her Yerden Açılabilir) */}
+      {activeVehicle && (
+        <>
+          <AddFuelModal
+            isOpen={isOpenAddFuel}
+            vehicle={activeVehicle}
+            lastPrice={calculateFuelStats(fuel).lastPricePerLiter}
+            editingRecord={editingFuelRecord}
+            onSave={(rec) => {
+              handleSaveFuel(rec);
+              setIsOpenAddFuel(false);
+              setEditingFuelRecord(null);
+            }}
+            onClose={() => {
+              setIsOpenAddFuel(false);
+              setEditingFuelRecord(null);
+            }}
+          />
+
+          <AddMaintenanceModal
+            isOpen={isOpenAddMaintenance}
+            vehicle={activeVehicle}
+            editingRecord={editingMaintenanceRecord}
+            onSave={(rec) => {
+              handleSaveMaintenance(rec);
+              setIsOpenAddMaintenance(false);
+              setEditingMaintenanceRecord(null);
+            }}
+            onClose={() => {
+              setIsOpenAddMaintenance(false);
+              setEditingMaintenanceRecord(null);
+            }}
+          />
+
+          <AddTireModal
+            isOpen={isOpenAddTire}
+            vehicle={activeVehicle}
+            isFirstTire={tires.length === 0}
+            editingTire={editingTireRecord}
+            onSave={(tire) => {
+              handleSaveTire(tire);
+              setIsOpenAddTire(false);
+              setEditingTireRecord(null);
+            }}
+            onClose={() => {
+              setIsOpenAddTire(false);
+              setEditingTireRecord(null);
+            }}
+          />
+
+          <AddScheduleModal
+            isOpen={isOpenAddSchedule}
+            vehicle={activeVehicle}
+            editingItem={editingScheduleRecord}
+            onSave={(item) => {
+              handleSaveSchedule(item);
+              setIsOpenAddSchedule(false);
+              setEditingScheduleRecord(null);
+            }}
+            onClose={() => {
+              setIsOpenAddSchedule(false);
+              setEditingScheduleRecord(null);
+            }}
+          />
+        </>
+      )}
 
     </div>
   );

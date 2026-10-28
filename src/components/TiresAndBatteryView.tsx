@@ -1,10 +1,9 @@
 import React, { useState } from 'react';
-import { Vehicle, TireSet, BatteryRecord, TireSeason, BatteryTechnology } from '../types';
+import { Vehicle, TireSet, BatteryRecord, BatteryTechnology } from '../types';
 import { 
   formatCurrency, 
   formatKm, 
-  formatDate, 
-  calculateDaysBetween 
+  formatDate 
 } from '../utils/calculations';
 import { 
   Disc, 
@@ -14,73 +13,36 @@ import {
   CheckCircle2, 
   RefreshCw, 
   Edit3, 
-  ShieldCheck, 
-  Calendar, 
-  Gauge, 
   Zap, 
-  AlertTriangle, 
-  X, 
-  Info 
+  X 
 } from 'lucide-react';
 
 interface TiresAndBatteryViewProps {
   vehicle: Vehicle;
   tires: TireSet[];
   batteries: BatteryRecord[];
+  onOpenAddTireModal: () => void;
+  onEditTire: (tire: TireSet) => void;
   onSaveTire: (tire: TireSet) => void;
   onDeleteTire: (id: string) => void;
   onMountTire: (tireId: string, currentKm: number) => void;
   onSaveBattery: (battery: BatteryRecord) => void;
   onDeleteBattery: (id: string) => void;
-  isOpenAddTireModal: boolean;
-  onCloseAddTireModal: () => void;
-  onOpenAddTireModal: () => void;
 }
 
 export const TiresAndBatteryView: React.FC<TiresAndBatteryViewProps> = ({
   vehicle,
   tires,
   batteries,
+  onOpenAddTireModal,
+  onEditTire,
   onSaveTire,
   onDeleteTire,
   onMountTire,
   onSaveBattery,
   onDeleteBattery,
-  isOpenAddTireModal,
-  onCloseAddTireModal,
-  onOpenAddTireModal,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'tires' | 'battery'>('tires');
-  
-  // Tire Form
-  const [editingTire, setEditingTire] = useState<TireSet | null>(null);
-  const [tireFormData, setTireFormData] = useState<{
-    season: TireSeason;
-    brand: string;
-    model: string;
-    size: string;
-    dot: string;
-    treadDepthMm: number;
-    purchaseDate: string;
-    purchaseKm: number;
-    purchasePrice: number;
-    isCurrentlyInstalled: boolean;
-    storageLocation: string;
-    notes: string;
-  }>({
-    season: 'yazlik',
-    brand: '',
-    model: '',
-    size: '205/55 R16',
-    dot: '',
-    treadDepthMm: 8.0,
-    purchaseDate: new Date().toISOString().split('T')[0],
-    purchaseKm: vehicle.currentKm,
-    purchasePrice: 8000,
-    isCurrentlyInstalled: tires.length === 0,
-    storageLocation: 'Araç üzerinde takılı',
-    notes: '',
-  });
 
   // Battery Modal & Form
   const [isBatteryModalOpen, setIsBatteryModalOpen] = useState(false);
@@ -116,72 +78,6 @@ export const TiresAndBatteryView: React.FC<TiresAndBatteryViewProps> = ({
   // Quick Tread Depth edit
   const [editingTreadTireId, setEditingTreadTireId] = useState<string | null>(null);
   const [newTreadValue, setNewTreadValue] = useState<number>(6.0);
-
-  // Tire Open Handlers
-  const handleOpenNewTire = () => {
-    setEditingTire(null);
-    setTireFormData({
-      season: 'yazlik',
-      brand: '',
-      model: '',
-      size: '205/55 R16',
-      dot: '',
-      treadDepthMm: 8.0,
-      purchaseDate: new Date().toISOString().split('T')[0],
-      purchaseKm: vehicle.currentKm,
-      purchasePrice: 8000,
-      isCurrentlyInstalled: tires.length === 0,
-      storageLocation: 'Araç üzerinde takılı',
-      notes: '',
-    });
-    onOpenAddTireModal();
-  };
-
-  const handleOpenEditTire = (tire: TireSet) => {
-    setEditingTire(tire);
-    setTireFormData({
-      season: tire.season,
-      brand: tire.brand,
-      model: tire.model,
-      size: tire.size,
-      dot: tire.dot || '',
-      treadDepthMm: tire.treadDepthMm || 8.0,
-      purchaseDate: tire.purchaseDate || '',
-      purchaseKm: tire.purchaseKm || vehicle.currentKm,
-      purchasePrice: tire.purchasePrice || 0,
-      isCurrentlyInstalled: tire.isCurrentlyInstalled,
-      storageLocation: tire.storageLocation || '',
-      notes: tire.notes || '',
-    });
-    onOpenAddTireModal();
-  };
-
-  const handleTireSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const newTire: TireSet = {
-      id: editingTire ? editingTire.id : `tire-${Date.now()}`,
-      vehicleId: vehicle.id,
-      season: tireFormData.season,
-      brand: tireFormData.brand.trim() || 'Lastik',
-      model: tireFormData.model.trim() || '',
-      size: tireFormData.size.trim() || 'Standart Ebat',
-      dot: tireFormData.dot.trim() || undefined,
-      treadDepthMm: Number(tireFormData.treadDepthMm),
-      purchaseDate: tireFormData.purchaseDate || undefined,
-      purchaseKm: Number(tireFormData.purchaseKm) || undefined,
-      purchasePrice: Number(tireFormData.purchasePrice) || 0,
-      isCurrentlyInstalled: tireFormData.isCurrentlyInstalled,
-      lastMountedDate: tireFormData.isCurrentlyInstalled ? (editingTire?.lastMountedDate || new Date().toISOString().split('T')[0]) : undefined,
-      lastMountedKm: tireFormData.isCurrentlyInstalled ? (editingTire?.lastMountedKm || vehicle.currentKm) : undefined,
-      totalKmUsed: editingTire ? editingTire.totalKmUsed : 0,
-      storageLocation: tireFormData.storageLocation.trim() || undefined,
-      notes: tireFormData.notes.trim() || undefined,
-      createdAt: editingTire ? editingTire.createdAt : new Date().toISOString(),
-    };
-
-    onSaveTire(newTire);
-    onCloseAddTireModal();
-  };
 
   // Battery Open Handlers
   const handleOpenNewBattery = () => {
@@ -318,7 +214,7 @@ export const TiresAndBatteryView: React.FC<TiresAndBatteryViewProps> = ({
           {/* Aksiyon Butonu */}
           <div className="flex justify-end">
             <button
-              onClick={handleOpenNewTire}
+              onClick={onOpenAddTireModal}
               className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-amber-500/20 transition-all hover:scale-[1.02]"
             >
               <Plus className="w-4 h-4" />
@@ -371,7 +267,7 @@ export const TiresAndBatteryView: React.FC<TiresAndBatteryViewProps> = ({
 
                   <div className="flex items-center gap-2 self-end sm:self-center">
                     <button
-                      onClick={() => handleOpenEditTire(mountedTire)}
+                      onClick={() => onEditTire(mountedTire)}
                       className="p-2 text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-white dark:hover:bg-slate-700 rounded-xl border border-slate-200 dark:border-slate-700 transition-colors"
                       title="Düzenle"
                     >
@@ -573,7 +469,7 @@ export const TiresAndBatteryView: React.FC<TiresAndBatteryViewProps> = ({
 
                       <div className="flex items-center gap-1">
                         <button
-                          onClick={() => handleOpenEditTire(tire)}
+                          onClick={() => onEditTire(tire)}
                           className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700"
                         >
                           <Edit3 className="w-4 h-4" />
@@ -756,141 +652,10 @@ export const TiresAndBatteryView: React.FC<TiresAndBatteryViewProps> = ({
         </div>
       )}
 
-      {/* ======================= LASTİK EKLE / DÜZENLE MODALI ======================= */}
-      {isOpenAddTireModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
-              <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
-                <Disc className="w-5 h-5 text-amber-500" />
-                <span>{editingTire ? 'Lastik Setini Düzenle' : 'Yeni Lastik Seti Ekle'}</span>
-              </h3>
-              <button onClick={onCloseAddTireModal} className="text-slate-400 hover:text-slate-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleTireSubmit} className="mt-4 space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Mevsim *</label>
-                  <select
-                    value={tireFormData.season}
-                    onChange={(e) => setTireFormData(p => ({ ...p, season: e.target.value as TireSeason }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white"
-                  >
-                    <option value="yazlik">☀️ Yazlık Lastik</option>
-                    <option value="kislik">❄️ Kışlık Lastik</option>
-                    <option value="dort_mevsim">🌿 Dört Mevsim</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Ebat *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="örn: 205/55 R16 91V"
-                    value={tireFormData.size}
-                    onChange={(e) => setTireFormData(p => ({ ...p, size: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Marka *</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="örn: Continental, Michelin"
-                    value={tireFormData.brand}
-                    onChange={(e) => setTireFormData(p => ({ ...p, brand: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Model</label>
-                  <input
-                    type="text"
-                    placeholder="örn: PremiumContact 7"
-                    value={tireFormData.model}
-                    onChange={(e) => setTireFormData(p => ({ ...p, model: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">DOT (Hafta/Yıl)</label>
-                  <input
-                    type="text"
-                    placeholder="örn: 2422"
-                    value={tireFormData.dot}
-                    onChange={(e) => setTireFormData(p => ({ ...p, dot: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Diş Derinliği (mm)</label>
-                  <input
-                    type="number"
-                    step="0.1"
-                    value={tireFormData.treadDepthMm}
-                    onChange={(e) => setTireFormData(p => ({ ...p, treadDepthMm: parseFloat(e.target.value) }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-slate-900 dark:text-white"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Satın Alma Tutarı</label>
-                  <input
-                    type="number"
-                    value={tireFormData.purchasePrice}
-                    onChange={(e) => setTireFormData(p => ({ ...p, purchasePrice: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-slate-900 dark:text-white"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">Saklama Yeri / Lastik Oteli</label>
-                <input
-                  type="text"
-                  placeholder="örn: Lastik Park Maslak (Fiş: 1245) veya Garaj"
-                  value={tireFormData.storageLocation}
-                  onChange={(e) => setTireFormData(p => ({ ...p, storageLocation: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white"
-                />
-              </div>
-
-              <div className="pt-2">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={tireFormData.isCurrentlyInstalled}
-                    onChange={(e) => setTireFormData(p => ({ ...p, isCurrentlyInstalled: e.target.checked }))}
-                    className="w-4 h-4 rounded text-amber-600"
-                  />
-                  <span className="text-xs font-semibold text-slate-800 dark:text-slate-200">
-                    Bu seti şu anda araçta takılı olarak ayarla
-                  </span>
-                </label>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200 dark:border-slate-700">
-                <button type="button" onClick={onCloseAddTireModal} className="px-4 py-2 text-xs rounded-xl text-slate-600">İptal</button>
-                <button type="submit" className="px-5 py-2 text-xs font-medium rounded-xl bg-amber-600 text-white">Kaydet</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
       {/* ======================= AKÜ EKLE / DÜZENLE MODALI ======================= */}
       {isBatteryModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-700">
               <h3 className="text-base font-bold text-slate-900 dark:text-white flex items-center gap-2">
                 <BatteryCharging className="w-5 h-5 text-emerald-500" />

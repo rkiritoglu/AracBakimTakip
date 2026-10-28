@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Vehicle, FuelRecord, FuelType } from '../types';
+import React from 'react';
+import { Vehicle, FuelRecord } from '../types';
 import { 
   formatCurrency, 
   formatKm, 
@@ -12,10 +12,7 @@ import {
   Trash2, 
   Calendar, 
   Gauge, 
-  CheckCircle, 
-  HelpCircle, 
   TrendingDown, 
-  X, 
   Edit3, 
   Sparkles 
 } from 'lucide-react';
@@ -23,139 +20,19 @@ import {
 interface FuelViewProps {
   vehicle: Vehicle;
   records: FuelRecord[];
-  onSaveRecord: (record: FuelRecord) => void;
-  onDeleteRecord: (id: string) => void;
-  isOpenAddModal: boolean;
-  onCloseAddModal: () => void;
   onOpenAddModal: () => void;
+  onEditRecord: (record: FuelRecord) => void;
+  onDeleteRecord: (id: string) => void;
 }
 
 export const FuelView: React.FC<FuelViewProps> = ({
   vehicle,
   records,
-  onSaveRecord,
-  onDeleteRecord,
-  isOpenAddModal,
-  onCloseAddModal,
   onOpenAddModal,
+  onEditRecord,
+  onDeleteRecord,
 }) => {
   const stats = calculateFuelStats(records);
-  const [editingRecord, setEditingRecord] = useState<FuelRecord | null>(null);
-
-  const [formData, setFormData] = useState<{
-    date: string;
-    km: number;
-    liters: string;
-    pricePerLiter: string;
-    totalCost: string;
-    isFullTank: boolean;
-    station: string;
-    fuelType: FuelType;
-    notes: string;
-  }>({
-    date: new Date().toISOString().split('T')[0],
-    km: vehicle.currentKm,
-    liters: '45.0',
-    pricePerLiter: '44.00',
-    totalCost: '1980.00',
-    isFullTank: true,
-    station: 'Shell',
-    fuelType: vehicle.fuelType,
-    notes: '',
-  });
-
-  const openNewModal = () => {
-    setEditingRecord(null);
-    setFormData({
-      date: new Date().toISOString().split('T')[0],
-      km: vehicle.currentKm,
-      liters: '',
-      pricePerLiter: stats.lastPricePerLiter ? stats.lastPricePerLiter.toString() : '44.00',
-      totalCost: '',
-      isFullTank: true,
-      station: '',
-      fuelType: vehicle.fuelType,
-      notes: '',
-    });
-    onOpenAddModal();
-  };
-
-  const openEditModal = (rec: FuelRecord) => {
-    setEditingRecord(rec);
-    setFormData({
-      date: rec.date,
-      km: rec.km,
-      liters: rec.liters.toString(),
-      pricePerLiter: rec.pricePerLiter.toString(),
-      totalCost: rec.totalCost.toString(),
-      isFullTank: rec.isFullTank,
-      station: rec.station || '',
-      fuelType: rec.fuelType,
-      notes: rec.notes || '',
-    });
-    onOpenAddModal();
-  };
-
-  // Akıllı otomatik hesaplayıcı
-  const handleLitersChange = (val: string) => {
-    const l = parseFloat(val);
-    const p = parseFloat(formData.pricePerLiter);
-    setFormData(prev => ({
-      ...prev,
-      liters: val,
-      totalCost: (!isNaN(l) && !isNaN(p)) ? (l * p).toFixed(2) : prev.totalCost,
-    }));
-  };
-
-  const handlePricePerLiterChange = (val: string) => {
-    const p = parseFloat(val);
-    const l = parseFloat(formData.liters);
-    setFormData(prev => ({
-      ...prev,
-      pricePerLiter: val,
-      totalCost: (!isNaN(l) && !isNaN(p)) ? (l * p).toFixed(2) : prev.totalCost,
-    }));
-  };
-
-  const handleTotalCostChange = (val: string) => {
-    const t = parseFloat(val);
-    const p = parseFloat(formData.pricePerLiter);
-    setFormData(prev => ({
-      ...prev,
-      totalCost: val,
-      liters: (!isNaN(t) && !isNaN(p) && p > 0) ? (t / p).toFixed(2) : prev.liters,
-    }));
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const litersNum = parseFloat(formData.liters);
-    const priceNum = parseFloat(formData.pricePerLiter);
-    const totalCostNum = parseFloat(formData.totalCost);
-
-    if (isNaN(litersNum) || isNaN(totalCostNum)) {
-      alert('Lütfen geçerli yakıt miktarı ve tutar giriniz.');
-      return;
-    }
-
-    const newRec: FuelRecord = {
-      id: editingRecord ? editingRecord.id : `fuel-${Date.now()}`,
-      vehicleId: vehicle.id,
-      date: formData.date,
-      km: Number(formData.km),
-      liters: litersNum,
-      pricePerLiter: !isNaN(priceNum) ? priceNum : Number((totalCostNum / litersNum).toFixed(2)),
-      totalCost: totalCostNum,
-      isFullTank: formData.isFullTank,
-      station: formData.station.trim() || undefined,
-      fuelType: formData.fuelType,
-      notes: formData.notes.trim() || undefined,
-      createdAt: editingRecord ? editingRecord.createdAt : new Date().toISOString(),
-    };
-
-    onSaveRecord(newRec);
-    onCloseAddModal();
-  };
 
   return (
     <div className="space-y-6 pb-20 md:pb-8">
@@ -173,7 +50,7 @@ export const FuelView: React.FC<FuelViewProps> = ({
         </div>
 
         <button
-          onClick={openNewModal}
+          onClick={onOpenAddModal}
           type="button"
           className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs sm:text-sm shadow-md shadow-blue-500/20 transition-all hover:scale-[1.02]"
         >
@@ -318,7 +195,6 @@ export const FuelView: React.FC<FuelViewProps> = ({
                 </div>
 
                 <div className="flex items-center justify-between sm:justify-end gap-5">
-                  {/* Tüketim Değeri (L/100km) */}
                   <div className="text-left sm:text-right">
                     {rec.consumptionL100 ? (
                       <div>
@@ -337,17 +213,15 @@ export const FuelView: React.FC<FuelViewProps> = ({
                     )}
                   </div>
 
-                  {/* Toplam Tutar */}
                   <div className="text-right">
                     <div className="font-mono font-bold text-slate-900 dark:text-white text-sm sm:text-base">
                       {formatCurrency(rec.totalCost)}
                     </div>
                   </div>
 
-                  {/* Butonlar */}
                   <div className="flex items-center gap-1">
                     <button
-                      onClick={() => openEditModal(rec)}
+                      onClick={() => onEditRecord(rec)}
                       className="p-1.5 text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
                       title="Düzenle"
                     >
@@ -371,190 +245,6 @@ export const FuelView: React.FC<FuelViewProps> = ({
           </div>
         )}
       </div>
-
-      {/* YENİ / DÜZENLE YAKIT MODALI */}
-      {isOpenAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in fade-in zoom-in-95 duration-150">
-            
-            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
-                  <Fuel className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
-                    {editingRecord ? 'Yakıt Kaydını Düzenle' : 'Yeni Yakıt Alımı Ekle'}
-                  </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
-                    {vehicle.plate} • {vehicle.brand} {vehicle.model}
-                  </p>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={onCloseAddModal}
-                className="p-1.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 rounded-lg"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-              
-              {/* Tarih & KM */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                    Tarih *
-                  </label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.date}
-                    onChange={(e) => setFormData(p => ({ ...p, date: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                    Gösterge Kilometresi *
-                  </label>
-                  <input
-                    type="number"
-                    required
-                    min={0}
-                    value={formData.km}
-                    onChange={(e) => setFormData(p => ({ ...p, km: Number(e.target.value) }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Litre, Birim Fiyat ve Toplam Tutar (Akıllı Senkronize) */}
-              <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-3">
-                <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-                  Yakıt & Fiyat Hesaplayıcı
-                </span>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                      Alınan Litre *
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      placeholder="örn: 45.5"
-                      value={formData.liters}
-                      onChange={(e) => handleLitersChange(e.target.value)}
-                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                      Litre Fiyatı (₺) *
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      placeholder="örn: 44.20"
-                      value={formData.pricePerLiter}
-                      onChange={(e) => handlePricePerLiterChange(e.target.value)}
-                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:outline-none"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                      Toplam Tutar (₺) *
-                    </label>
-                    <input
-                      type="number"
-                      step="any"
-                      required
-                      placeholder="örn: 2010.00"
-                      value={formData.totalCost}
-                      onChange={(e) => handleTotalCostChange(e.target.value)}
-                      className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-blue-400 dark:border-blue-500 rounded-xl text-xs sm:text-sm font-mono font-extrabold text-blue-600 dark:text-blue-400 focus:outline-none"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* İstasyon & Tam Depo */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                    İstasyon / Marka
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="örn: Shell, Opet, BP..."
-                    value={formData.station}
-                    onChange={(e) => setFormData(p => ({ ...p, station: e.target.value }))}
-                    className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none"
-                  />
-                </div>
-
-                <div className="pt-4">
-                  <label className="flex items-center gap-2 cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={formData.isFullTank}
-                      onChange={(e) => setFormData(p => ({ ...p, isFullTank: e.target.checked }))}
-                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                    />
-                    <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                      Depo Tamamen Dolduruldu (Full Depo)
-                    </span>
-                  </label>
-                  <span className="text-[11px] text-slate-400 block mt-0.5 ml-6">
-                    L/100km tüketim hesabı için tam depo seçilmesi önerilir.
-                  </span>
-                </div>
-              </div>
-
-              {/* Notlar */}
-              <div>
-                <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                  Notlar
-                </label>
-                <input
-                  type="text"
-                  placeholder="Uzun yol, klima açık vs."
-                  value={formData.notes}
-                  onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none"
-                />
-              </div>
-
-              {/* Butonlar */}
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-700">
-                <button
-                  type="button"
-                  onClick={onCloseAddModal}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-                >
-                  İptal
-                </button>
-                <button
-                  type="submit"
-                  className="px-5 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium shadow-md shadow-blue-500/20 transition-all hover:scale-[1.02]"
-                >
-                  {editingRecord ? 'Güncellemeleri Kaydet' : 'Yakıt Kaydını Ekle'}
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      )}
 
     </div>
   );
