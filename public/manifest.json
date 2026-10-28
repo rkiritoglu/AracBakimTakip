@@ -1,0 +1,18 @@
+{
+  "name": "OtoBakım Pro - Araç Bakım & Takip",
+  "short_name": "OtoBakım",
+  "description": "Araç bakım, yakıt tüketimi, kullanılan parçalar, lastik ve akü takibi uygulaması.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#2563eb",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
