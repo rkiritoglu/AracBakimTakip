@@ -47,7 +47,7 @@ interface DashboardViewProps {
   onOpenAddMaintenance: () => void;
   onOpenAddTire: () => void;
   onOpenAddSchedule: () => void;
-  onQuickUpdateKm: () => void;
+  onQuickUpdateKm?: () => void;
 }
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
@@ -72,6 +72,34 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
   const mountedTire = tires.find(t => t.isCurrentlyInstalled);
   const activeBattery = batteries.find(b => b.isActive);
 
+  // Yakıt ve Vites Türkçe Etiketleri
+  const getFuelLabel = (type?: string) => {
+    switch (type) {
+      case 'benzin': return 'Benzin';
+      case 'dizel': return 'Dizel';
+      case 'lpg': return 'LPG';
+      case 'hibrit': return 'Hibrit';
+      case 'elektrik': return 'Elektrik';
+      default: return type ? type.charAt(0).toUpperCase() + type.slice(1) : '';
+    }
+  };
+
+  const getTransLabel = (trans?: string) => {
+    switch (trans) {
+      case 'otomatik': return 'Otomatik';
+      case 'manuel': return 'Manuel';
+      case 'yari_otomatik': return 'Yarı Otomatik';
+      default: return trans ? trans.charAt(0).toUpperCase() + trans.slice(1) : '';
+    }
+  };
+
+  const vehicleDesc = [
+    vehicle.subModel || `${vehicle.year} Model`,
+    vehicle.enginePower,
+    getFuelLabel(vehicle.fuelType),
+    getTransLabel(vehicle.transmission),
+  ].filter(Boolean).join(' • ');
+
   // Sıradaki en yakın bakım planı
   const upcomingSchedule = schedules
     .filter(s => s.targetKm && s.targetKm >= vehicle.currentKm)
@@ -92,46 +120,30 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
 
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <div className="flex items-center gap-3">
-              <span className="px-3 py-1 bg-white/10 backdrop-blur-md rounded-lg font-mono text-sm sm:text-base font-bold tracking-widest border border-white/20">
-                {vehicle.plate}
-              </span>
-              <span className="text-xs px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/30 uppercase font-semibold">
-                {vehicle.fuelType} • {vehicle.transmission}
-              </span>
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-bold mt-2 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               {vehicle.brand} {vehicle.model}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-300 mt-1">
-              {vehicle.subModel || `${vehicle.year} Model`} {vehicle.enginePower ? `• ${vehicle.enginePower}` : ''}
+            <p className="text-xs sm:text-sm text-slate-300 mt-1.5 font-medium">
+              {vehicleDesc}
             </p>
 
-            <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-300">
-              <button 
-                onClick={onQuickUpdateKm}
-                className="flex items-center gap-1.5 bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-xl backdrop-blur-sm transition-colors border border-white/15"
-                title="KM Güncelle"
-              >
-                <Gauge className="w-4 h-4 text-blue-400" />
-                <span>Güncel: <strong className="font-mono text-white text-sm">{formatKm(vehicle.currentKm)}</strong></span>
-              </button>
+            {(vehicle.inspectionDate || vehicle.engineOilSpec) && (
+              <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-slate-300">
+                {vehicle.inspectionDate && (
+                  <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Muayene: <strong className="text-white">{formatDate(vehicle.inspectionDate)}</strong></span>
+                  </div>
+                )}
 
-              {vehicle.inspectionDate && (
-                <div className="flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-                  <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  <span>Muayene: <strong className="text-white">{formatDate(vehicle.inspectionDate)}</strong></span>
-                </div>
-              )}
-
-              {vehicle.engineOilSpec && (
-                <div className="hidden sm:flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
-                  <Wrench className="w-4 h-4 text-amber-400" />
-                  <span>Yağ: <strong className="text-white">{vehicle.engineOilSpec}</strong></span>
-                </div>
-              )}
-            </div>
+                {vehicle.engineOilSpec && (
+                  <div className="hidden sm:flex items-center gap-1.5 bg-white/5 px-3 py-1.5 rounded-xl border border-white/10">
+                    <Wrench className="w-4 h-4 text-amber-400" />
+                    <span>Yağ: <strong className="text-white">{vehicle.engineOilSpec}</strong></span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Hızlı Ekleme Butonları */}

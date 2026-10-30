@@ -16,6 +16,7 @@ import {
 import { 
   BarChart3, 
   Download, 
+  Upload,
   Printer, 
   PieChart, 
   Fuel, 
@@ -23,7 +24,7 @@ import {
   Package, 
   Disc, 
   BatteryCharging, 
-  Layers 
+  Database 
 } from 'lucide-react';
 
 interface ReportsViewProps {
@@ -32,6 +33,8 @@ interface ReportsViewProps {
   fuel: FuelRecord[];
   tires: TireSet[];
   batteries: BatteryRecord[];
+  onExportData: () => void;
+  onImportData?: () => void;
 }
 
 export const ReportsView: React.FC<ReportsViewProps> = ({
@@ -40,6 +43,8 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
   fuel,
   tires,
   batteries,
+  onExportData,
+  onImportData,
 }) => {
   const overall = calculateOverallExpenses(vehicle, maintenance, fuel, tires, batteries);
   const fuelStats = calculateFuelStats(fuel);
@@ -99,7 +104,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             <span>Maliyet Raporları & Analizler</span>
           </h2>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-            Toplam araç maliyeti, kategori dağılımı ve CSV veri çıktısı
+            Toplam araç maliyeti, kategori dağılımı ve veri çıktıları
           </p>
         </div>
 
@@ -107,7 +112,7 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
           <button
             onClick={handlePrint}
             type="button"
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium hover:bg-slate-50 shadow-sm transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium hover:bg-slate-50 dark:hover:bg-slate-700/50 shadow-sm transition-colors"
           >
             <Printer className="w-4 h-4 text-slate-500" />
             <span>Yazdır / PDF</span>
@@ -243,6 +248,41 @@ export const ReportsView: React.FC<ReportsViewProps> = ({
             </div>
           </div>
 
+        </div>
+      </div>
+
+      {/* Veri Yedekleme ve Yönetimi Bölümü */}
+      <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h4 className="font-bold text-base text-slate-900 dark:text-white flex items-center gap-2">
+            <Database className="w-5 h-5 text-indigo-500" />
+            <span>Sistem Veri Yedekleme</span>
+          </h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+            Tüm kayıtlı araçlarınızı, bakım, yakıt, parça ve lastik geçmişinizi tek bir JSON dosyası olarak bilgisayarınıza indirin veya geri yükleyin.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {onImportData && (
+            <button
+              onClick={onImportData}
+              type="button"
+              className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/60 text-slate-700 dark:text-slate-300 text-xs sm:text-sm font-medium transition-colors"
+            >
+              <Upload className="w-4 h-4 text-blue-500" />
+              <span>Yedekten Geri Yükle</span>
+            </button>
+          )}
+
+          <button
+            onClick={onExportData}
+            type="button"
+            className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-xs sm:text-sm font-semibold shadow-md shadow-indigo-500/20 transition-all hover:scale-[1.02]"
+          >
+            <Download className="w-4 h-4" />
+            <span>Tüm Verileri Yedekle (JSON İndir)</span>
+          </button>
         </div>
       </div>
 

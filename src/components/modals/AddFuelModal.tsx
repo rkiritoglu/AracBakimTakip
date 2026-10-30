@@ -78,7 +78,7 @@ export const AddFuelModal: React.FC<AddFuelModalProps> = ({
     setFormData(prev => ({
       ...prev,
       pricePerLiter: val,
-      totalCost: (!isNaN(l) && !isNaN(p)) ? (l * p).toFixed(2) : prev.totalCost,
+      totalCost: (!isNaN(p) && !isNaN(l)) ? (l * p).toFixed(2) : prev.totalCost,
     }));
   };
 
@@ -95,8 +95,8 @@ export const AddFuelModal: React.FC<AddFuelModalProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const litersNum = parseFloat(formData.liters);
-    const priceNum = parseFloat(formData.pricePerLiter);
     const totalCostNum = parseFloat(formData.totalCost);
+    const priceNum = parseFloat(formData.pricePerLiter);
 
     if (isNaN(litersNum) || isNaN(totalCostNum)) {
       alert('Lütfen geçerli yakıt miktarı ve tutar giriniz.');
@@ -123,20 +123,20 @@ export const AddFuelModal: React.FC<AddFuelModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
-      <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-lg w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 dark:border-slate-700 animate-in zoom-in-95 duration-150 overflow-hidden">
         
         {/* Header */}
-        <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-slate-700">
+        <div className="flex items-center justify-between p-5 pb-4 border-b border-slate-200 dark:border-slate-700 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400">
+            <div className="p-2.5 rounded-xl bg-blue-100 dark:bg-blue-950 text-blue-600 dark:text-blue-400 shrink-0">
               <Fuel className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white">
+              <h3 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white leading-tight">
                 {editingRecord ? 'Yakıt Kaydını Düzenle' : 'Yeni Yakıt Alımı Ekle'}
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono">
+              <p className="text-xs text-slate-500 dark:text-slate-400 font-mono mt-0.5">
                 {vehicle.plate} • {vehicle.brand} {vehicle.model}
               </p>
             </div>
@@ -151,146 +151,159 @@ export const AddFuelModal: React.FC<AddFuelModalProps> = ({
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="mt-4 space-y-4">
-          
-          {/* Tarih & KM */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                Tarih *
-              </label>
-              <input
-                type="date"
-                required
-                value={formData.date}
-                onChange={(e) => setFormData(p => ({ ...p, date: e.target.value }))}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                Gösterge Kilometresi *
-              </label>
-              <input
-                type="number"
-                required
-                min={0}
-                value={formData.km}
-                onChange={(e) => setFormData(p => ({ ...p, km: Number(e.target.value) }))}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-          </div>
-
-          {/* Litre, Birim Fiyat ve Toplam Tutar */}
-          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-3">
-            <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider block">
-              Yakıt & Fiyat Hesaplayıcı
-            </span>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {/* Scrollable Form Body */}
+        <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
+            
+            {/* Tarih & KM */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                  Alınan Litre *
+                  Alım Tarihi *
                 </label>
                 <input
-                  type="number"
-                  step="any"
+                  type="date"
                   required
-                  placeholder="örn: 45.5"
-                  value={formData.liters}
-                  onChange={(e) => handleLitersChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  value={formData.date}
+                  onChange={(e) => setFormData(p => ({ ...p, date: e.target.value }))}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                  Litre Fiyatı (₺) *
+                  Kilometre *
                 </label>
                 <input
                   type="number"
-                  step="any"
                   required
-                  placeholder="örn: 44.50"
-                  value={formData.pricePerLiter}
-                  onChange={(e) => handlePricePerLiterChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-mono font-bold text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  min={0}
+                  value={formData.km}
+                  onChange={(e) => setFormData(p => ({ ...p, km: Number(e.target.value) }))}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
+              </div>
+            </div>
+
+            {/* Yakıt Türü & İstasyon */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
+                  Yakıt Türü
+                </label>
+                <select
+                  value={formData.fuelType}
+                  onChange={(e) => setFormData(p => ({ ...p, fuelType: e.target.value as FuelType }))}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="benzin">Benzin</option>
+                  <option value="dizel">Dizel / Motorin</option>
+                  <option value="lpg">LPG / Otogaz</option>
+                  <option value="hibrit">Hibrit</option>
+                  <option value="elektrik">Elektrik (kWh)</option>
+                </select>
               </div>
 
               <div>
                 <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                  Toplam Tutar (₺) *
+                  Akaryakıt İstasyonu
                 </label>
                 <input
-                  type="number"
-                  step="any"
-                  required
-                  placeholder="örn: 2025.00"
-                  value={formData.totalCost}
-                  onChange={(e) => handleTotalCostChange(e.target.value)}
-                  className="w-full px-3 py-2 bg-white dark:bg-slate-800 border border-blue-400 dark:border-blue-500 rounded-xl text-xs sm:text-sm font-mono font-extrabold text-blue-600 dark:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  type="text"
+                  placeholder="örn: Shell, Opet, BP"
+                  value={formData.station}
+                  onChange={(e) => setFormData(p => ({ ...p, station: e.target.value }))}
+                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
             </div>
-          </div>
 
-          {/* İstasyon & Tam Depo */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-center">
+            {/* Litre & Birim Fiyat & Tutar */}
+            <div className="p-4 rounded-2xl bg-blue-50/70 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/50 space-y-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Litre (Miktar) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.1"
+                    required
+                    placeholder="45.00"
+                    value={formData.liters}
+                    onChange={(e) => handleLitersChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Litre Fiyatı (₺)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="44.50"
+                    value={formData.pricePerLiter}
+                    onChange={(e) => handlePricePerLiterChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl font-mono text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                    Toplam Tutar (₺) *
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="1"
+                    required
+                    placeholder="2000"
+                    value={formData.totalCost}
+                    onChange={(e) => handleTotalCostChange(e.target.value)}
+                    className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-blue-400 dark:border-blue-600 rounded-xl font-mono font-bold text-blue-600 dark:text-blue-400 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 pt-1">
+                <input
+                  type="checkbox"
+                  id="fullTank"
+                  checked={formData.isFullTank}
+                  onChange={(e) => setFormData(p => ({ ...p, isFullTank: e.target.checked }))}
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500 border-slate-300"
+                />
+                <label htmlFor="fullTank" className="text-xs font-medium text-slate-700 dark:text-slate-300 cursor-pointer">
+                  Depo Tamamen Dolduruldu (Hassas tüketim hesabı için önerilir)
+                </label>
+              </div>
+            </div>
+
             <div>
               <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-                İstasyon / Marka
+                Notlar
               </label>
               <input
                 type="text"
-                placeholder="örn: Shell, Opet, BP..."
-                value={formData.station}
-                onChange={(e) => setFormData(p => ({ ...p, station: e.target.value }))}
+                placeholder="Uzun yol, klima açık vs."
+                value={formData.notes}
+                onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
                 className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
 
-            <div className="pt-2">
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={formData.isFullTank}
-                  onChange={(e) => setFormData(p => ({ ...p, isFullTank: e.target.checked }))}
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                />
-                <span className="text-xs font-medium text-slate-700 dark:text-slate-300">
-                  Tam Depo Dolduruldu
-                </span>
-              </label>
-              <span className="text-[11px] text-slate-400 block mt-0.5 ml-6">
-                L/100km tüketim hesabı için önerilir
-              </span>
-            </div>
-          </div>
-
-          {/* Notlar */}
-          <div>
-            <label className="block text-xs font-medium text-slate-600 dark:text-slate-300 mb-1">
-              Notlar
-            </label>
-            <input
-              type="text"
-              placeholder="Uzun yol, klima açık vs."
-              value={formData.notes}
-              onChange={(e) => setFormData(p => ({ ...p, notes: e.target.value }))}
-              className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl text-xs sm:text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-            />
           </div>
 
           {/* Butonlar */}
-          <div className="flex items-center justify-end gap-3 pt-3 border-t border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-end gap-3 p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50/80 dark:bg-slate-900/60 shrink-0">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              className="px-4 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-200/60 dark:hover:bg-slate-700 transition-colors"
             >
               İptal
             </button>

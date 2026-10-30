@@ -1,0 +1,68 @@
+name: Android APK & AAB Derleme (Build)
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch: # GitHub arayüzünden manuel başlatabilmek için
+
+jobs:
+  build:
+    name: APK ve AAB Oluştur
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Kodu Çek (Checkout)
+        uses: actions/checkout@v4
+
+      - name: Node.js Kurulumu
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Java 21 Kurulumu
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Android SDK Kurulumu
+        uses: android-actions/setup-android@v3
+
+      - name: Bağımlılıkları Yükle
+        run: npm ci
+
+      - name: Web Uygulamasını Derle
+        run: npm run build
+
+      - name: Capacitor Android Eşitleme (Sync)
+        run: npx cap sync android
+
+      - name: Gradle Yetkilendirme
+        run: chmod +x android/gradlew
+
+      - name: APK Derle (Debug)
+        run: |
+          cd android
+          ./gradlew assembleDebug
+
+      - name: AAB Derle (Debug)
+        run: |
+          cd android
+          ./gradlew bundleDebug
+
+      - name: APK Dosyasını İndirilebilir Olarak Yükle (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: OtoBakimPro-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+
+      - name: AAB Dosyasını İndirilebilir Olarak Yükle (Artifact)
+        uses: actions/upload-artifact@v4
+        with:
+          name: OtoBakimPro-AAB
+          path: android/app/build/outputs/bundle/debug/app-debug.aab
+          if-no-files-found: error

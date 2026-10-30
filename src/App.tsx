@@ -41,8 +41,6 @@ export function App() {
     }
   }, [isDark]);
 
-  const toggleDark = () => setIsDark(prev => !prev);
-
   // Tab State
   const [activeTab, setActiveTab] = useState<TabType>('dashboard');
 
@@ -270,11 +268,6 @@ export function App() {
         onSelectVehicle={handleSelectVehicle}
         onAddNewVehicle={() => setActiveTab('vehicle')}
         onUpdateKm={handleUpdateKm}
-        isDark={isDark}
-        onToggleDark={toggleDark}
-        onExportData={handleExportData}
-        onImportData={handleImportClick}
-        onResetData={handleResetData}
       />
 
       {/* Navigasyon Tabları */}
@@ -448,6 +441,8 @@ export function App() {
                 fuel={fuel}
                 tires={tires}
                 batteries={batteries}
+                onExportData={handleExportData}
+                onImportData={handleImportClick}
               />
             )}
 
